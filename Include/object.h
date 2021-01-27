@@ -66,6 +66,7 @@ whose size is determined when the object is allocated.
 
 #ifdef Py_TRACE_REFS
 /* Define pointers to support a doubly-linked list of all live heap objects. */
+/* 定义指针以支持所有活动堆对象的双向链表 */
 #define _PyObject_HEAD_EXTRA            \
     struct _object *_ob_next;           \
     struct _object *_ob_prev;
@@ -73,11 +74,14 @@ whose size is determined when the object is allocated.
 #define _PyObject_EXTRA_INIT 0, 0,
 
 #else
+/* release模式下该宏不包含任何内容，反之则为一个双向链表实现 */
 #define _PyObject_HEAD_EXTRA
+/* release模式下该宏不包含任何内容，反之则为一个双向链表定义 */
 #define _PyObject_EXTRA_INIT
 #endif
 
 /* PyObject_HEAD defines the initial segment of every PyObject. */
+/* PyObject_HEAD 定义在每个PyObject的初始段 */
 #define PyObject_HEAD                   PyObject ob_base;
 
 #define PyObject_HEAD_INIT(type)        \
@@ -93,6 +97,10 @@ whose size is determined when the object is allocated.
  * has room for ob_size elements.  Note that ob_size is an element count,
  * not necessarily a byte count.
  */
+/* PyObject_VAR_HEAD定义了所有可变大小容器对象的初始段。
+这些语句以声明一个只有1个元素的数组结束，
+但是腾出了足够的空间，以便数组实际上有足够的空间来存放ob_size元素。
+注意，ob_size是一个元素计数，不一定是字节计数。 */
 #define PyObject_VAR_HEAD      PyVarObject ob_base;
 #define Py_INVALID_SIZE (Py_ssize_t)-1
 
@@ -101,21 +109,26 @@ whose size is determined when the object is allocated.
  * by hand.  Similarly every pointer to a variable-size Python object can,
  * in addition, be cast to PyVarObject*.
  */
+/* 实际上没有任何东西被声明为PyObject，
+ 但是每个指向Python对象的指针都可以被强制转换为PyObject*,这是手动创造的产物。
+ 类似地，每个指向可变大小Python对象的指针都可以被强制转换为PyVarObject*。
+ */
 typedef struct _object {
-    _PyObject_HEAD_EXTRA
-    Py_ssize_t ob_refcnt;
-    struct _typeobject *ob_type;
+    _PyObject_HEAD_EXTRA ;
+
+    Py_ssize_t ob_refcnt; // GC的引用计数
+    struct _typeobject *ob_type; // 指向类型对象的指针
 } PyObject;
 
-/* Cast argument to PyObject* type. */
+/* 将参数转换为 PyObject* 类型 */
 #define _PyObject_CAST(op) ((PyObject*)(op))
 
 typedef struct {
-    PyObject ob_base;
-    Py_ssize_t ob_size; /* Number of items in variable part */
+    PyObject ob_base; // 基础PyObject
+    Py_ssize_t ob_size; // 可变部分的数量
 } PyVarObject;
 
-/* Cast argument to PyVarObject* type. */
+/* 将参数转换为 PyVarObject* 类型 */
 #define _PyVarObject_CAST(op) ((PyVarObject*)(op))
 
 #define Py_REFCNT(ob)           (_PyObject_CAST(ob)->ob_refcnt)
@@ -424,15 +437,16 @@ PyAPI_FUNC(void) _Py_dec_count(struct _typeobject *);
 PyAPI_FUNC(int) _PyTraceMalloc_NewReference(PyObject *op);
 
 #ifdef Py_TRACE_REFS
-/* Py_TRACE_REFS is such major surgery that we call external routines. */
+/* Py_TRACE_REFS是如此重要的手术，我们称之为外部例程。 */
 PyAPI_FUNC(void) _Py_NewReference(PyObject *);
 PyAPI_FUNC(void) _Py_ForgetReference(PyObject *);
 PyAPI_FUNC(void) _Py_PrintReferences(FILE *);
 PyAPI_FUNC(void) _Py_PrintReferenceAddresses(FILE *);
 PyAPI_FUNC(void) _Py_AddToAllObjects(PyObject *, int force);
 #else
-/* Without Py_TRACE_REFS, there's little enough to do that we expand code
-   inline. */
+/*没有Py_TRACE_REFS，我们几乎没有什么可以做的，我们展开代码内联。*/
+
+/* 新建对象初始化引用计数为1 */
 static inline void _Py_NewReference(PyObject *op)
 {
     if (_Py_tracemalloc_config.tracing) {
