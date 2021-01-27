@@ -177,10 +177,9 @@ typedef Py_ssize_t printfunc;
 typedef struct _typeobject {
     PyObject_VAR_HEAD
     const char *tp_name; /* For printing, in format "<module>.<name>" */
-    Py_ssize_t tp_basicsize, tp_itemsize; /* 内存空间大小信息 */
+    Py_ssize_t tp_basicsize, tp_itemsize; /* For allocation */
 
     /* Methods to implement standard operations */
-    /* 实现标准操作的方法 */
 
     destructor tp_dealloc;
     Py_ssize_t tp_vectorcall_offset;
@@ -191,14 +190,12 @@ typedef struct _typeobject {
     reprfunc tp_repr;
 
     /* Method suites for standard classes */
-    /* 标准类的方法套件 */
 
     PyNumberMethods *tp_as_number;
     PySequenceMethods *tp_as_sequence;
     PyMappingMethods *tp_as_mapping;
 
     /* More standard operations (here for binary compatibility) */
-    /* 更多标准操作(这里是为了二进制兼容性) */
 
     hashfunc tp_hash;
     ternaryfunc tp_call;
